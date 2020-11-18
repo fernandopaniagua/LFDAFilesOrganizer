@@ -18,9 +18,11 @@ import java.awt.Font;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.awt.event.ActionEvent;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 
 public class MainFrame extends JFrame {
 
@@ -30,12 +32,15 @@ public class MainFrame extends JFrame {
 	private JButton btnTargetFolder;
 	private JTextField tfTargetFolder;
 	private JTextField tfFoldersPrefix;
+	private JLabel lblProgress;
+	
+	private int totalFiles;
 
 	/**
 	 * Create the frame.
 	 */
 	public MainFrame() {
-		setTitle("Files Organizer");
+		setTitle("Files Organizer - By Fernando Paniagua (2020)");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 868, 596);
 		contentPane = new JPanel();
@@ -44,18 +49,6 @@ public class MainFrame extends JFrame {
 		contentPane.setLayout(null);
 
 		JButton btnSourceFolder = new JButton("Source folder");
-		btnSourceFolder.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				final JFileChooser fc = new JFileChooser();
-				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				fc.setDialogTitle("Select source folder");
-				int returnVal = fc.showOpenDialog(null);
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					File file = fc.getSelectedFile();
-					tfSourceFolder.setText(file.getAbsolutePath());
-				}
-			}
-		});
 		btnSourceFolder.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		btnSourceFolder.setBounds(25, 49, 129, 33);
 		contentPane.add(btnSourceFolder);
@@ -69,18 +62,6 @@ public class MainFrame extends JFrame {
 		btnOrganize = new JButton("Organize");
 
 		btnTargetFolder = new JButton("Target folder");
-		btnTargetFolder.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				final JFileChooser fc = new JFileChooser();
-				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				fc.setDialogTitle("Select target folder");
-				int returnVal = fc.showOpenDialog(null);
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					File file = fc.getSelectedFile();
-					tfTargetFolder.setText(file.getAbsolutePath());
-				}
-			}
-		});
 		btnTargetFolder.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		btnTargetFolder.setBounds(25, 113, 129, 33);
 		contentPane.add(btnTargetFolder);
@@ -116,7 +97,42 @@ public class MainFrame extends JFrame {
 		spFilesPerFolder.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		spFilesPerFolder.setBounds(166, 234, 59, 33);
 		contentPane.add(spFilesPerFolder);
+		
+		lblProgress = new JLabel("0/0");
+		lblProgress.setHorizontalAlignment(SwingConstants.CENTER);
+		lblProgress.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblProgress.setBounds(398, 359, 111, 33);
+		contentPane.add(lblProgress);
 
+		btnSourceFolder.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				final JFileChooser fc = new JFileChooser();
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fc.setDialogTitle("Select source folder");
+				int returnVal = fc.showOpenDialog(null);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					File file = fc.getSelectedFile();
+					tfSourceFolder.setText(file.getAbsolutePath());
+					totalFiles = file.list().length;
+					lblProgress.setText("0/" + totalFiles);
+				}
+			}
+		});
+		
+		
+		btnTargetFolder.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				final JFileChooser fc = new JFileChooser();
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fc.setDialogTitle("Select target folder");
+				int returnVal = fc.showOpenDialog(null);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					File file = fc.getSelectedFile();
+					tfTargetFolder.setText(file.getAbsolutePath());
+				}
+			}
+		});
+		
 		btnOrganize.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (tfSourceFolder.getText().trim().isEmpty() || tfTargetFolder.getText().trim().isEmpty()) {
@@ -128,6 +144,7 @@ public class MainFrame extends JFrame {
 						contentPane.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 						FileOrganizer.organize(tfSourceFolder.getText(), tfTargetFolder.getText(),
 								tfFoldersPrefix.getText(), (Integer) spFilesPerFolder.getValue());
+						lblProgress.setText(FileOrganizer.getFilesCopied() + "/" + totalFiles);
 					} catch (IOException e) {
 						GUIUtil.showErrorMessage("IO Error");
 						e.printStackTrace();
